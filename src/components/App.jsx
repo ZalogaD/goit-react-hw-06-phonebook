@@ -1,25 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
 import Filter from './Filter/Filter';
 import { nanoid } from 'nanoid';
 import { Cont, TitlePh, TitleCont } from './App.styled';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact, dltContact } from 'redux/contactsSlice';
+import { setFilter } from 'redux/filterSlice';
 
 const App = () => {
-  const [contacts, setContacts] = useState([
-    { id: nanoid(), name: 'Rosie Simpson', number: '459-12-56' },
-    { id: nanoid(), name: 'Hermione Kline', number: '443-89-12' },
-    { id: nanoid(), name: 'Eden Clements', number: '645-17-79' },
-    { id: nanoid(), name: 'Annie Copeland', number: '227-91-26' },
-  ]);
-  const [filter, setFilter] = useState('');
+  const dispatch = useDispatch();
+  const contacts = useSelector(state => state.contacts);
+  const filter = useSelector(state => state.filter);
 
   useEffect(() => {
     const savedContacts = localStorage.getItem('contacts');
     if (savedContacts) {
-      setContacts(JSON.parse(savedContacts));
+      dispatch(addContact(JSON.parse(savedContacts)));
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     localStorage.setItem('contacts', JSON.stringify(contacts));
@@ -37,22 +36,15 @@ const App = () => {
       return;
     }
 
-    const newContact = {
-      id: nanoid(),
-      name: newName,
-      number: newNumber,
-    };
-    setContacts(prevContacts => [...prevContacts, newContact]);
+    dispatch(addContact({ name: newName, number: newNumber }));
   };
 
-  const deleteContact = id => {
-    setContacts(prevContacts =>
-      prevContacts.filter(contact => contact.id !== id)
-    );
+  const deleteContactHandler = id => {
+    dispatch(dltContact(id));
   };
 
   const handleFilterChange = e => {
-    setFilter(e.target.value);
+    dispatch(setFilter(e.target.value));
   };
 
   const filterContacts = contacts.filter(contact =>
@@ -65,7 +57,10 @@ const App = () => {
       <ContactForm addNewContact={addNewContact} contacts={contacts} />
       <TitleCont>Contacts:</TitleCont>
       <Filter filter={filter} onFilterChange={handleFilterChange} />
-      <ContactList contacts={filterContacts} onDeleteContact={deleteContact} />
+      <ContactList
+        contacts={filterContacts}
+        onDeleteContact={deleteContactHandler}
+      />
     </Cont>
   );
 };
